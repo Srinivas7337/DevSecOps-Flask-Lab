@@ -11,71 +11,42 @@ on:
 
 jobs:
   security:
-
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install Requirements
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Flask Build Check
-      run: |
-        python -m py_compile app.py
+      - name: Flask Build Check
+        run: |
+          python -m py_compile app.py
 
-    ######################################################
-    # Install Semgrep
-    ######################################################
+      - name: Install Semgrep
+        run: |
+          python -m pip install semgrep
 
-    - name: Install Semgrep
-      run: |
-        python -m pip install semgrep
+      - name: Run Semgrep
+        run: |
+          semgrep scan --config auto --json --output semgrep-report.json
 
-    ######################################################
-    # Run Semgrep
-    ######################################################
+      - name: Upload Semgrep Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep-report.json
 
-    - name: Run Semgrep Scan
-      run: |
-        semgrep scan \
-        --config auto \
-        --json \
-        --output semgrep-report.json
-
-    ######################################################
-    # Upload Report
-    ######################################################
-
-    - name: Upload Semgrep Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: semgrep-report
-        path: semgrep-report.json
-
-    ######################################################
-    # Gitleaks
-    ######################################################
-
-    - name: Run Gitleaks
-    uses: gitleaks/gitleaks-action@v2
-    env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    ######################################################
-    # Gitleaks
-    ######################################################
-
-    - name: Run Gitleaks
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
